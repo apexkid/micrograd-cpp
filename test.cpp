@@ -1,13 +1,16 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <set>
+#include <stack>
 #include <string>
 #include <vector>
 
 class Value {
 public:
-  Value(double data, std::string label, std::vector<Value *> children,
-        std::function<void(std::vector<Value *>)> backward_fn) {
+  Value(double data, std::string label,
+        std::vector<std::shared_ptr<Value>> children,
+        std::function<void(std::vector<std::shared_ptr<Value>>)> backward_fn) {
     this->data = data;
     this->label = label;
     this->children = children;
@@ -23,51 +26,84 @@ public:
     return std::make_shared<Value>(data, label);
   }
 
-  double data;
-  double grad = 0.0;
-  std::vector<Value *> children;
-  std::string label;
-
-  std::shared_ptr<Value> operator+(Value &rhs) {
-    auto backward = [](std::vector<Value *> children) {
+  friend std::shared_ptr<Value> operator+(const std::shared_ptr<Value> &a,
+                                          const std::shared_ptr<Value> &b) {
+    auto output_backward = [](std::vector<std::shared_ptr<Value>> children) {
       for (auto &child : children) {
         child->grad += 1.0;
       }
     };
-    return std::make_shared<Value>(
-        Value(data + rhs.data, (this->label + "+" + rhs.label),
-              std::vector<Value *>{this, &rhs}, backward));
+
+    auto output_data = a->data + b->data;
+    auto output_label = a->label + "+" + b->label;
+    auto output_children = std::vector<std::shared_ptr<Value>>{a, b};
+    return std::make_shared<Value>(output_data, output_label, output_children,
+                                   output_backward);
   }
 
   void backward() {
     grad = 1.0;
-    backward_fn(children);
+    auto node_stack = TopologicalSort();
+    while (!node_stack.empty()) {
+      auto *node = node_stack.top();
+      if (node->backward_fn == nullptr) {
+        node_stack.pop();
+        continue;
+      }
+      node->backward_fn(node->children);
+      node_stack.pop();
+    }
   }
 
   void print_network() {
-    std::cout << "Label: " << label << " Value: " << data << " Grad: " << grad
-              << std::endl;
-    for (auto &child : children) {
-      child->print_network();
+    auto node_stack = TopologicalSort();
+    while (!node_stack.empty()) {
+      auto *node = node_stack.top();
+      std::cout << "Label:" << node->label << " Data:" << node->data
+                << " Grad:" << node->grad << std::endl;
+      node_stack.pop();
     }
   }
 
 private:
-  std::function<void(std::vector<Value *>)> backward_fn;
+  std::stack<const Value *> TopologicalSort() {
+    std::stack<const Value *> stack;
+    std::set<const Value *> visited;
+
+    TopologicalSortUtil(*this, stack, visited);
+    return stack;
+  }
+
+  void TopologicalSortUtil(const Value &node, std::stack<const Value *> &stack,
+                           std::set<const Value *> &visited) {
+    if (visited.find(&node) != visited.end()) {
+      return;
+    }
+
+    for (auto &child : node.children) {
+      TopologicalSortUtil(*child, stack, visited);
+    }
+
+    stack.push(&node);
+    visited.emplace(&node);
+  }
+
+  std::function<void(std::vector<std::shared_ptr<Value>>)> backward_fn;
+
+  double data;
+  double grad = 0.0;
+  std::vector<std::shared_ptr<Value>> children;
+  std::string label;
 };
 
 int main() {
   std::cout << "Hello, World!" << std::endl;
-  Value a(1.0, "a");
-  Value b(2.0, "b");
-  Value c{3.0, "d"};
+  auto a = Value::create_value(1.0, "a");
+  auto b = Value::create_value(2.0, "b");
+  auto c = Value::create_value(3.0, "c");
   std::shared_ptr<Value> d = a + b;
-  std::shared_ptr<Value> e = *d + c;
-  std::cout << c.data << std::endl;
+  std::shared_ptr<Value> e = d + c;
   e->backward();
   e->print_network();
-  //   std::cout << a.grad << std::endl;
-  //   std::cout << b.grad << std::endl;
-  //   std::cout << "c.children.size() " << c.children.size() << std::endl;
   return 0;
 }
