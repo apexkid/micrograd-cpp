@@ -15,51 +15,51 @@ namespace micrograd {
 GradNode::GradNode(double data, std::string label,
                    std::vector<std::shared_ptr<GradNode>> children,
                    std::function<void()> backward_fn) {
-  this->data = data;
-  this->label = label;
-  this->children = children;
-  this->backward_fn = backward_fn;
+  this->data_ = data;
+  this->label_ = label;
+  this->children_ = children;
+  this->backward_fn_ = backward_fn;
 }
 
 GradNode::GradNode(double data, std::string label) {
-  this->data = data;
-  this->label = label;
+  this->data_ = data;
+  this->label_ = label;
 }
 
-void GradNode::make_scalar() { is_scalar = true; }
+void GradNode::MakeScalar() { is_scalar_ = true; }
 
-std::shared_ptr<GradNode> GradNode::create_gradnode(double data,
-                                                    std::string label) {
+std::shared_ptr<GradNode> GradNode::CreateGradnode(double data,
+                                                   std::string label) {
   return std::make_shared<GradNode>(data, label);
 }
 
 std::shared_ptr<GradNode>
-GradNode::create_gradnode(double data, std::string label,
-                          std::vector<std::shared_ptr<GradNode>> children,
-                          std::function<void()> backward_fn) {
+GradNode::CreateGradnode(double data, std::string label,
+                         std::vector<std::shared_ptr<GradNode>> children,
+                         std::function<void()> backward_fn) {
   return std::make_shared<GradNode>(data, label, children, backward_fn);
 }
 
-void GradNode::backward() {
-  grad = 1.0;
+void GradNode::Backward() {
+  grad_ = 1.0;
   auto node_stack = TopologicalSort();
   while (!node_stack.empty()) {
     auto *node = node_stack.top();
-    if (node->backward_fn == nullptr) {
+    if (node->backward_fn_ == nullptr) {
       node_stack.pop();
       continue;
     }
-    node->backward_fn();
+    node->backward_fn_();
     node_stack.pop();
   }
 }
 
-void GradNode::print_network() {
+void GradNode::PrintNetwork() {
   auto node_stack = TopologicalSort();
   while (!node_stack.empty()) {
     auto *node = node_stack.top();
-    std::cout << "Label:" << node->label << " Data:" << node->data
-              << " Grad:" << node->grad << std::endl;
+    std::cout << "Label:" << node->label_ << " Data:" << node->data_
+              << " Grad:" << node->grad_ << std::endl;
     node_stack.pop();
   }
 }
@@ -79,7 +79,7 @@ void GradNode::TopologicalSortUtil(const GradNode &node,
     return;
   }
 
-  for (auto &child : node.children) {
+  for (auto &child : node.children_) {
     TopologicalSortUtil(*child, stack, visited);
   }
 
@@ -89,130 +89,154 @@ void GradNode::TopologicalSortUtil(const GradNode &node,
 
 std::shared_ptr<GradNode> operator+(double a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(a, std::to_string(a));
+  gradnode->MakeScalar();
   return gradnode + b;
 }
 
 std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
                                     double b) {
-  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(b, std::to_string(b));
+  gradnode->MakeScalar();
   return a + gradnode;
 }
 
 std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
   auto output_backward = [a, b]() {
-    if (!a->is_scalar) {
-      a->grad += 1.0;
+    if (!a->is_scalar_) {
+      a->grad_ += 1.0;
     }
-    if (!b->is_scalar) {
-      b->grad += 1.0;
+    if (!b->is_scalar_) {
+      b->grad_ += 1.0;
     }
   };
 
-  auto output_data = a->data + b->data;
-  auto output_label = a->label + "+" + b->label;
+  auto output_data = a->data_ + b->data_;
+  auto output_label = a->label_ + "+" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::create_gradnode(output_data, output_label, output_children,
-                                   output_backward);
+  return GradNode::CreateGradnode(output_data, output_label, output_children,
+                                  output_backward);
 }
 
 std::shared_ptr<GradNode> operator-(double a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(a, std::to_string(a));
+  gradnode->MakeScalar();
   return gradnode - b;
 }
 
 std::shared_ptr<GradNode> operator-(const std::shared_ptr<GradNode> &a,
                                     double b) {
-  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(b, std::to_string(b));
+  gradnode->MakeScalar();
   return a - gradnode;
 }
 
 std::shared_ptr<GradNode> operator-(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
   auto output_backward = [a, b]() {
-    if (!a->is_scalar) {
-      a->grad += 1.0;
+    if (!a->is_scalar_) {
+      a->grad_ += 1.0;
     }
-    if (!b->is_scalar) {
-      b->grad -= 1.0;
+    if (!b->is_scalar_) {
+      b->grad_ -= 1.0;
     }
   };
 
-  auto output_data = a->data - b->data;
-  auto output_label = a->label + "-" + b->label;
+  auto output_data = a->data_ - b->data_;
+  auto output_label = a->label_ + "-" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::create_gradnode(output_data, output_label, output_children,
-                                   output_backward);
+  return GradNode::CreateGradnode(output_data, output_label, output_children,
+                                  output_backward);
 }
 
 std::shared_ptr<GradNode> operator*(double a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(a, std::to_string(a));
+  gradnode->MakeScalar();
   return gradnode * b;
 }
 
 std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
                                     double b) {
-  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(b, std::to_string(b));
+  gradnode->MakeScalar();
   return a * gradnode;
 }
 
 std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
   auto output_backward = [a, b]() {
-    if (!a->is_scalar) {
-      a->grad += b->data;
+    if (!a->is_scalar_) {
+      a->grad_ += b->data_;
     }
-    if (!b->is_scalar) {
-      b->grad += a->data;
+    if (!b->is_scalar_) {
+      b->grad_ += a->data_;
     }
   };
 
-  auto output_data = a->data * b->data;
-  auto output_label = a->label + "*" + b->label;
+  auto output_data = a->data_ * b->data_;
+  auto output_label = a->label_ + "*" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::create_gradnode(output_data, output_label, output_children,
-                                   output_backward);
+  return GradNode::CreateGradnode(output_data, output_label, output_children,
+                                  output_backward);
 }
 
 std::shared_ptr<GradNode> operator/(double a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(a, std::to_string(a));
+  gradnode->MakeScalar();
   return gradnode / b;
 }
 
 std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
                                     double b) {
-  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
-  gradnode->make_scalar();
+  auto gradnode = GradNode::CreateGradnode(b, std::to_string(b));
+  gradnode->MakeScalar();
   return a / gradnode;
 }
 
 std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
   auto output_backward = [a, b]() {
-    if (!a->is_scalar) {
-      a->grad += (1.0 / b->data);
+    if (!a->is_scalar_) {
+      a->grad_ += (1.0 / b->data_);
     }
-    if (!b->is_scalar) {
-      b->grad -= (a->data / std::pow(b->data, 2));
+    if (!b->is_scalar_) {
+      b->grad_ -= (a->data_ / std::pow(b->data_, 2));
     }
   };
 
-  auto output_data = a->data * b->data;
-  auto output_label = a->label + "*" + b->label;
+  auto output_data = a->data_ * b->data_;
+  auto output_label = a->label_ + "*" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::create_gradnode(output_data, output_label, output_children,
-                                   output_backward);
+  return GradNode::CreateGradnode(output_data, output_label, output_children,
+                                  output_backward);
+}
+
+std::shared_ptr<GradNode> GradNode::pow(double p) {
+  auto gradnode = GradNode::CreateGradnode(p, std::to_string(p));
+  gradnode->MakeScalar();
+  return GradNode::pow(gradnode);
+}
+
+std::shared_ptr<GradNode> GradNode::pow(std::shared_ptr<GradNode> &p) {
+  auto output_backward = [p, this]() {
+    if (!p->is_scalar_) {
+      p->grad_ += std::pow(this->data_, p->data_) * std::log(this->data_);
+    }
+    if (!this->is_scalar_) {
+      this->grad_ += this->data_ * std::pow(this->data_, p->data_ - 1);
+    }
+  };
+
+  auto output_data = std::pow(this->data_, p->data_);
+  auto output_label = this->label_ + "^" + p->label_;
+  auto output_children = std::vector<std::shared_ptr<GradNode>>{
+      std::make_shared<GradNode>(*this), p};
+  return GradNode::CreateGradnode(output_data, output_label, output_children,
+                                  output_backward);
 }
 
 } // namespace micrograd

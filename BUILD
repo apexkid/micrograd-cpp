@@ -12,3 +12,13 @@ cc_binary(
     srcs = ["micrograd_main.cc"],
     deps = [":micrograd"], 
 )
+
+cc_test(
+    name = "micrograd_test",
+    srcs = ["micrograd_test.cc"],
+    deps = [
+        ":micrograd",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

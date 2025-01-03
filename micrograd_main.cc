@@ -1,13 +1,14 @@
 #include "micrograd.h"
+#include <iostream>
 
 using namespace apexkid::micrograd;
 
 int main() {
-  auto a = GradNode::create_gradnode(1.0, "a");
-  auto b = GradNode::create_gradnode(2.0, "b");
-  auto c = a / b;
+  auto a = GradNode::CreateGradnode(1.0, "a");
+  auto b = GradNode::CreateGradnode(2.0, "b");
+  auto c = a->pow(b);
   auto d = c + 1.0;
-  d->backward();
-  d->print_network();
+  d->Backward();
+  d->PrintNetwork();
   return 0;
 }

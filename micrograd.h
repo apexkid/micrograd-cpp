@@ -19,17 +19,18 @@ public:
 
   GradNode(double data, std::string label);
 
-  void make_scalar();
-  void backward();
-  void print_network();
+  void MakeScalar();
+  void Backward();
+  void PrintNetwork();
+  void GetGrad();
 
-  static std::shared_ptr<GradNode> create_gradnode(double data,
-                                                   std::string label);
+  static std::shared_ptr<GradNode> CreateGradnode(double data,
+                                                  std::string label);
 
   static std::shared_ptr<GradNode>
-  create_gradnode(double data, std::string label,
-                  std::vector<std::shared_ptr<GradNode>> children,
-                  std::function<void()> backward_fn);
+  CreateGradnode(double data, std::string label,
+                 std::vector<std::shared_ptr<GradNode>> children,
+                 std::function<void()> backward_fn);
 
   // Addition
   friend std::shared_ptr<GradNode>
@@ -75,6 +76,10 @@ public:
   operator/(const std::shared_ptr<GradNode> &a,
             const std::shared_ptr<GradNode> &b);
 
+  // Power
+  std::shared_ptr<GradNode> pow(double p);
+  std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &p);
+
 private:
   std::stack<const GradNode *> TopologicalSort();
 
@@ -82,13 +87,12 @@ private:
                            std::stack<const GradNode *> &stack,
                            std::set<const GradNode *> &visited);
 
-  std::function<void()> backward_fn;
-
-  double data;
-  double grad = 0.0;
-  std::vector<std::shared_ptr<GradNode>> children;
-  std::string label;
-  bool is_scalar = false;
+  std::function<void()> backward_fn_;
+  double data_;
+  double grad_ = 0.0;
+  std::vector<std::shared_ptr<GradNode>> children_;
+  std::string label_;
+  bool is_scalar_ = false;
 };
 
 } // namespace micrograd
