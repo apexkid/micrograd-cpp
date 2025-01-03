@@ -10,10 +10,9 @@
 namespace apexkid {
 namespace micrograd {
 
-GradNode::GradNode(
-    double data, std::string label,
-    std::vector<std::shared_ptr<GradNode>> children,
-    std::function<void(std::vector<std::shared_ptr<GradNode>>)> backward_fn) {
+GradNode::GradNode(double data, std::string label,
+                   std::vector<std::shared_ptr<GradNode>> children,
+                   std::function<void()> backward_fn) {
   this->data = data;
   this->label = label;
   this->children = children;
@@ -32,10 +31,10 @@ std::shared_ptr<GradNode> GradNode::create_gradnode(double data,
   return std::make_shared<GradNode>(data, label);
 }
 
-std::shared_ptr<GradNode> GradNode::create_gradnode(
-    double data, std::string label,
-    std::vector<std::shared_ptr<GradNode>> children,
-    std::function<void(std::vector<std::shared_ptr<GradNode>>)> backward_fn) {
+std::shared_ptr<GradNode>
+GradNode::create_gradnode(double data, std::string label,
+                          std::vector<std::shared_ptr<GradNode>> children,
+                          std::function<void()> backward_fn) {
   return std::make_shared<GradNode>(data, label, children, backward_fn);
 }
 
@@ -48,7 +47,7 @@ void GradNode::backward() {
       node_stack.pop();
       continue;
     }
-    node->backward_fn(node->children);
+    node->backward_fn();
     node_stack.pop();
   }
 }
@@ -102,11 +101,12 @@ std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
 
 std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto output_backward = [](std::vector<std::shared_ptr<GradNode>> children) {
-    for (auto &child : children) {
-      if (!child->is_scalar) {
-        child->grad += 1.0;
-      }
+  auto output_backward = [a, b]() {
+    if (!a->is_scalar) {
+      a->grad += 1.0;
+    }
+    if (!b->is_scalar) {
+      b->grad += 1.0;
     }
   };
 
