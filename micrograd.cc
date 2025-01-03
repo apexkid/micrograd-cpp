@@ -1,4 +1,6 @@
 #include "micrograd.h"
+
+#include <cmath>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -144,6 +146,70 @@ std::shared_ptr<GradNode> operator-(const std::shared_ptr<GradNode> &a,
 
   auto output_data = a->data - b->data;
   auto output_label = a->label + "-" + b->label;
+  auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
+  return GradNode::create_gradnode(output_data, output_label, output_children,
+                                   output_backward);
+}
+
+std::shared_ptr<GradNode> operator*(double a,
+                                    const std::shared_ptr<GradNode> &b) {
+  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
+  gradnode->make_scalar();
+  return gradnode * b;
+}
+
+std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
+                                    double b) {
+  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
+  gradnode->make_scalar();
+  return a * gradnode;
+}
+
+std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
+                                    const std::shared_ptr<GradNode> &b) {
+  auto output_backward = [a, b]() {
+    if (!a->is_scalar) {
+      a->grad += b->data;
+    }
+    if (!b->is_scalar) {
+      b->grad += a->data;
+    }
+  };
+
+  auto output_data = a->data * b->data;
+  auto output_label = a->label + "*" + b->label;
+  auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
+  return GradNode::create_gradnode(output_data, output_label, output_children,
+                                   output_backward);
+}
+
+std::shared_ptr<GradNode> operator/(double a,
+                                    const std::shared_ptr<GradNode> &b) {
+  auto gradnode = GradNode::create_gradnode(a, std::to_string(a));
+  gradnode->make_scalar();
+  return gradnode / b;
+}
+
+std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
+                                    double b) {
+  auto gradnode = GradNode::create_gradnode(b, std::to_string(b));
+  gradnode->make_scalar();
+  return a / gradnode;
+}
+
+std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
+                                    const std::shared_ptr<GradNode> &b) {
+  auto output_backward = [a, b]() {
+    if (!a->is_scalar) {
+      a->grad += (1.0 / b->data);
+    }
+    if (!b->is_scalar) {
+      b->grad -= (a->data / std::pow(b->data, 2));
+    }
+  };
+
+  auto output_data = a->data * b->data;
+  auto output_label = a->label + "*" + b->label;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
   return GradNode::create_gradnode(output_data, output_label, output_children,
                                    output_backward);

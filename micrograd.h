@@ -53,6 +53,28 @@ public:
   operator-(const std::shared_ptr<GradNode> &a,
             const std::shared_ptr<GradNode> &b);
 
+  // Multiplication
+  friend std::shared_ptr<GradNode>
+  operator*(double a, const std::shared_ptr<GradNode> &b);
+
+  friend std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
+                                             double b);
+
+  friend std::shared_ptr<GradNode>
+  operator*(const std::shared_ptr<GradNode> &a,
+            const std::shared_ptr<GradNode> &b);
+
+  // Division
+  friend std::shared_ptr<GradNode>
+  operator/(double a, const std::shared_ptr<GradNode> &b);
+
+  friend std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
+                                             double b);
+
+  friend std::shared_ptr<GradNode>
+  operator/(const std::shared_ptr<GradNode> &a,
+            const std::shared_ptr<GradNode> &b);
+
 private:
   std::stack<const GradNode *> TopologicalSort();
 
