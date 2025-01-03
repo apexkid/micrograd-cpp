@@ -25,12 +25,12 @@ public:
 
   void make_scalar() { is_scalar = true; }
 
-  static std::shared_ptr<GradNode> create_grad_node(double data,
-                                                    std::string label) {
+  static std::shared_ptr<GradNode> create_gradnode(double data,
+                                                   std::string label) {
     return std::make_shared<GradNode>(data, label);
   }
 
-  static std::shared_ptr<GradNode> create_grad_node(
+  static std::shared_ptr<GradNode> create_gradnode(
       double data, std::string label,
       std::vector<std::shared_ptr<GradNode>> children,
       std::function<void(std::vector<std::shared_ptr<GradNode>>)> backward_fn) {
@@ -39,14 +39,14 @@ public:
 
   friend std::shared_ptr<GradNode>
   operator+(double a, const std::shared_ptr<GradNode> &b) {
-    auto gradnode = create_grad_node(a, std::to_string(a));
+    auto gradnode = create_gradnode(a, std::to_string(a));
     gradnode->make_scalar();
     return gradnode + b;
   }
 
   friend std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
                                              double b) {
-    auto gradnode = create_grad_node(b, std::to_string(b));
+    auto gradnode = create_gradnode(b, std::to_string(b));
     gradnode->make_scalar();
     return a + gradnode;
   }
@@ -65,8 +65,8 @@ public:
     auto output_data = a->data + b->data;
     auto output_label = a->label + "+" + b->label;
     auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-    return create_grad_node(output_data, output_label, output_children,
-                            output_backward);
+    return create_gradnode(output_data, output_label, output_children,
+                           output_backward);
   }
 
   void backward() {
@@ -128,9 +128,9 @@ private:
 
 int main() {
   std::cout << "Hello, World!" << std::endl;
-  auto a = GradNode::create_grad_node(1.0, "a");
-  auto b = GradNode::create_grad_node(2.0, "b");
-  auto c = GradNode::create_grad_node(3.0, "c");
+  auto a = GradNode::create_gradnode(1.0, "a");
+  auto b = GradNode::create_gradnode(2.0, "b");
+  auto c = GradNode::create_gradnode(3.0, "c");
   std::shared_ptr<GradNode> d = a + b;
   std::shared_ptr<GradNode> e = 1 + a + d + c;
   e->backward();
