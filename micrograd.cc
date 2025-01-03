@@ -34,6 +34,7 @@ std::shared_ptr<GradNode> GradNode::CreateGradnode(double data,
 }
 
 double GradNode::GetGrad() { return grad_; }
+double GradNode::GetData() { return data_; }
 
 std::shared_ptr<GradNode>
 GradNode::CreateGradnode(double data, std::string label,
@@ -210,8 +211,8 @@ std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
     }
   };
 
-  auto output_data = a->data_ * b->data_;
-  auto output_label = a->label_ + "*" + b->label_;
+  auto output_data = a->data_ / b->data_;
+  auto output_label = a->label_ + "/" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
   return GradNode::CreateGradnode(output_data, output_label, output_children,
                                   output_backward);
@@ -229,7 +230,7 @@ std::shared_ptr<GradNode> GradNode::pow(std::shared_ptr<GradNode> &p) {
       p->grad_ += std::pow(this->data_, p->data_) * std::log(this->data_);
     }
     if (!this->is_scalar_) {
-      this->grad_ += this->data_ * std::pow(this->data_, p->data_ - 1);
+      this->grad_ += p->data_ * std::pow(this->data_, p->data_ - 1);
     }
   };
 

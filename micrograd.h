@@ -23,6 +23,7 @@ public:
   void Backward();
   void PrintNetwork();
   double GetGrad();
+  double GetData();
 
   static std::shared_ptr<GradNode> CreateGradnode(double data,
                                                   std::string label);
