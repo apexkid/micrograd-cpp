@@ -33,6 +33,8 @@ std::shared_ptr<GradNode> GradNode::CreateGradnode(double data,
   return std::make_shared<GradNode>(data, label);
 }
 
+double GradNode::GetGrad() { return grad_; }
+
 std::shared_ptr<GradNode>
 GradNode::CreateGradnode(double data, std::string label,
                          std::vector<std::shared_ptr<GradNode>> children,

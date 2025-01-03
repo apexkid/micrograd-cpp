@@ -22,7 +22,7 @@ public:
   void MakeScalar();
   void Backward();
   void PrintNetwork();
-  void GetGrad();
+  double GetGrad();
 
   static std::shared_ptr<GradNode> CreateGradnode(double data,
                                                   std::string label);
