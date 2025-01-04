@@ -14,7 +14,7 @@ int main() {
   std::vector<double> y = {33,   34, 35, 8.2, 7,
                            41.4, 13, 33, 39,  26}; // Price in 10000s of dollars
 
-  // Initialize weights
+  // Initialize weights randomly between -1 and 1.
   auto w1 = GradNode::CreateGradnode(0.1, "w1");
   auto w2 = GradNode::CreateGradnode(0.7, "w2");
   auto w3 = GradNode::CreateGradnode(-0.4, "w3");
@@ -35,6 +35,8 @@ int main() {
       cumulative_loss += loss->GetData();
 
       // Backward pass
+      // This is an example of Stochastic Gradient Descent (SGD) as it is
+      // running on each training example.
       loss->Backward();
 
       // Update weights
