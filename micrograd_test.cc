@@ -184,6 +184,32 @@ TEST(Micrograd, ChainedEquation4) {
   EXPECT_EQ(z->GetData(), -3.0);
 }
 
+// Z = ((A^2 + B^2) / (A - B)) + 3AB
+TEST(Micrograd, ChainedEquation5) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = GradNode::CreateGradnode(4.0, "b");
+
+  auto z = ((pow(a, 2) + pow(b, 2)) / (a - b)) + (3 * a * b);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 5);
+  EXPECT_EQ(b->GetGrad(), 7);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), 14.0);
+}
+
+// Z = (A + B)/(A - B)
+TEST(Micrograd, SingleVariable) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+
+  auto z = a + a + a;
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 3);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), 6.0);
+}
+
 } // namespace
 } // namespace micrograd
 } // namespace apexkid
