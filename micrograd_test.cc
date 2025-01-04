@@ -162,13 +162,26 @@ TEST(Micrograd, ChainedEquation3) {
 
   auto z = ((pow(a, 2.0) * b) + a) / c;
   z->Backward();
-  z->PrintNetwork();
 
   EXPECT_EQ(a->GetGrad(), 17.0 / 8.0);
   EXPECT_EQ(b->GetGrad(), 0.5);
   EXPECT_EQ(c->GetGrad(), -18.0 / 64.0);
   EXPECT_EQ(z->GetGrad(), 1.0);
   EXPECT_EQ(z->GetData(), 18.0 / 8.0);
+}
+
+// Z = (A + B)/(A - B)
+TEST(Micrograd, ChainedEquation4) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = GradNode::CreateGradnode(4.0, "b");
+
+  auto z = (a + b) / (a - b);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), -2);
+  EXPECT_EQ(b->GetGrad(), 1);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), -3.0);
 }
 
 } // namespace
