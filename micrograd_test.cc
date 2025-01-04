@@ -198,8 +198,8 @@ TEST(Micrograd, ChainedEquation5) {
   EXPECT_EQ(z->GetData(), 14.0);
 }
 
-// Z = (A + B)/(A - B)
-TEST(Micrograd, SingleVariable) {
+// Z = A + A + A
+TEST(Micrograd, SingleVariable1) {
   auto a = GradNode::CreateGradnode(2.0, "a");
 
   auto z = a + a + a;
@@ -208,6 +208,19 @@ TEST(Micrograd, SingleVariable) {
   EXPECT_EQ(a->GetGrad(), 3);
   EXPECT_EQ(z->GetGrad(), 1.0);
   EXPECT_EQ(z->GetData(), 6.0);
+}
+
+// Z = (A + A + A)^2 + (3*A)
+TEST(Micrograd, SingleVariable2) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = a + a + a;
+
+  auto z = pow(b, 2) + (3 * a);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 39.0);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), 42);
 }
 
 } // namespace
