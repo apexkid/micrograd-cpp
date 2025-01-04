@@ -148,6 +148,9 @@ public:
   friend std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
                                        std::shared_ptr<GradNode> &exponent);
 
+  /// Sigmoid
+  friend std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x);
+
 private:
   /**
    * @brief Performs a topological sort of the computational graph.

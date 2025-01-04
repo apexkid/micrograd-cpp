@@ -255,5 +255,13 @@ std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
   return result;
 }
 
+std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x) {
+  auto e = GradNode::CreateGradnode(std::exp(1), "E");
+  e->MakeScalar();
+  auto minus_x = -1 * x;
+  auto result = 1.0 / (1.0 + pow(e, minus_x));
+  return result;
+}
+
 } // namespace micrograd
 } // namespace apexkid

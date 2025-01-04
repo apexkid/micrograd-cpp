@@ -223,6 +223,17 @@ TEST(Micrograd, SingleVariable2) {
   EXPECT_EQ(z->GetData(), 42);
 }
 
+TEST(Micrograd, Sigmoid) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto z = sigmoid(a);
+  z->Backward();
+  z->PrintNetwork();
+
+  EXPECT_NEAR(a->GetGrad(), 0.1049935854035065, 1e-9);
+  EXPECT_NEAR(z->GetGrad(), 1.0, 1e-9);
+  EXPECT_NEAR(z->GetData(), 0.8807970779778823, 1e-9);
+}
+
 } // namespace
 } // namespace micrograd
 } // namespace apexkid
