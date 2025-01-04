@@ -3,16 +3,19 @@
 #include <vector>
 using namespace apexkid::micrograd;
 
+// Implementing a single neuron linear regression model using micrograd.
+// The model is trained to classify a house as expensive or cheap given the
+// number of bedrooms, age of the house, and lot size in acres.
+//
+// @author apexkid
 int main() {
   // Input features
-  // Mocked using: y = 2*x1 - 3*x2 + 4*x3 + 5
   std::vector<double> x1 = {4, 2, 3, 1, 2, 8, 1, 9, 6, 1}; // Num of bedrooms
   std::vector<double> x2 = {3, 1, 4, 4, 2,
                             1, 2, 3, 2, 2}; // Age of house in years
   std::vector<double> x3 = {7, 7, 9, 3, 1, 6, 3, 5, 7, 5}; // Lot size in acres
-  // Output values. Actual: {32, 34, 35, 7,  7, 42, 13, 34, 39, 21}
-  std::vector<double> y = {33,   34, 35, 8.2, 7,
-                           41.4, 13, 33, 39,  26}; // Price in 10000s of dollars
+  std::vector<double> y = {1, 1, 1, 0, 0,
+                           1, 0, 1, 1, 0}; // Expensive (1) or cheap (0)
 
   // Initialize weights randomly between -1 and 1.
   auto w1 = GradNode::CreateGradnode(0.1, "w1");
@@ -29,9 +32,11 @@ int main() {
     double cumulative_loss = 0;
     for (int i = 0; i < x1.size(); i++) {
       // Forward pass
-      auto pred = w1 * x1[i] + w2 * x2[i] + w3 * x3[i] + b;
-      auto diff = pred - y[i];
-      loss = pow(diff, 2);
+      auto z = w1 * x1[i] + w2 * x2[i] + w3 * x3[i] + b;
+      auto pred = sigmoid(z);
+      auto one_minus_pred = 1 - pred;
+      // Cross-entropy loss
+      loss = -y[i] * log(pred) - (1 - y[i]) * log(one_minus_pred);
       cumulative_loss += loss->GetData();
 
       // Backward pass
