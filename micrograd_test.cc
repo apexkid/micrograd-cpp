@@ -225,13 +225,64 @@ TEST(Micrograd, SingleVariable2) {
 
 TEST(Micrograd, Sigmoid) {
   auto a = GradNode::CreateGradnode(2.0, "a");
+
   auto z = sigmoid(a);
   z->Backward();
-  z->PrintNetwork();
 
   EXPECT_NEAR(a->GetGrad(), 0.1049935854035065, 1e-9);
   EXPECT_NEAR(z->GetGrad(), 1.0, 1e-9);
   EXPECT_NEAR(z->GetData(), 0.8807970779778823, 1e-9);
+}
+
+TEST(Micrograd, Tanh) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+
+  auto z = tanh(a);
+  z->Backward();
+
+  EXPECT_NEAR(a->GetGrad(), 0.07065082485316443, 1e-9);
+  EXPECT_NEAR(z->GetGrad(), 1.0, 1e-9);
+  EXPECT_NEAR(z->GetData(), 0.9640275800758169, 1e-9);
+}
+
+TEST(Micrograd, Relu) {
+  auto a = GradNode::CreateGradnode(-2.0, "a");
+
+  auto z = relu(a);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 0);
+  EXPECT_EQ(z->GetGrad(), 1);
+  EXPECT_EQ(z->GetData(), 0);
+}
+
+TEST(Micrograd, PositiveReluWithEquation) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = GradNode::CreateGradnode(3.0, "b");
+  auto c = pow(a, 2.0) + pow(b, 2.0);
+
+  auto z = relu(c);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 4);
+  EXPECT_EQ(b->GetGrad(), 6);
+  EXPECT_EQ(z->GetGrad(), 1);
+  EXPECT_EQ(z->GetData(), 13);
+}
+
+TEST(Micrograd, NegativeReluWithEquation) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = GradNode::CreateGradnode(3.0, "b");
+  auto c = pow(a, 2.0) - pow(b, 2.0);
+
+  auto z = relu(c);
+  z->Backward();
+  z->PrintNetwork();
+
+  EXPECT_EQ(a->GetGrad(), 0);
+  EXPECT_EQ(b->GetGrad(), 0);
+  EXPECT_EQ(z->GetGrad(), 1);
+  EXPECT_EQ(z->GetData(), 0);
 }
 
 } // namespace

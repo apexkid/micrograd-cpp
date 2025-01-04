@@ -263,5 +263,20 @@ std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x) {
   return result;
 }
 
+std::shared_ptr<GradNode> tanh(std::shared_ptr<GradNode> &x) {
+  auto e = GradNode::CreateGradnode(std::exp(1), "E");
+  e->MakeScalar();
+  auto minus_x = -1 * x;
+  auto result = (pow(e, x) - pow(e, minus_x)) / (pow(e, x) + pow(e, minus_x));
+  return result;
+}
+
+std::shared_ptr<GradNode> relu(std::shared_ptr<GradNode> &x) {
+  auto zero = GradNode::CreateGradnode(0.0, "0");
+  zero->MakeScalar();
+  auto result = x->GetData() > 0 ? x : zero;
+  return result;
+}
+
 } // namespace micrograd
 } // namespace apexkid

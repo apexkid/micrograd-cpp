@@ -151,6 +151,12 @@ public:
   /// Sigmoid
   friend std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x);
 
+  /// Tanh
+  friend std::shared_ptr<GradNode> tanh(std::shared_ptr<GradNode> &x);
+
+  /// ReLU
+  friend std::shared_ptr<GradNode> relu(std::shared_ptr<GradNode> &x);
+
 private:
   /**
    * @brief Performs a topological sort of the computational graph.
