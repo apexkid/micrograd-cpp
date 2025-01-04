@@ -22,3 +22,9 @@ cc_test(
         "@googletest//:gtest_main",
     ],
 )
+
+cc_binary(
+    name = "nn_regression_demo",
+    srcs = ["nn_regression_demo.cc"],
+    deps = [":micrograd"], 
+)
