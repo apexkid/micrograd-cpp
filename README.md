@@ -2,10 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A simple autograd library written entirely in C++ inspired by [karpathy/micrograd](https://github.com/karpathy/micrograd?tab=readme-ov-file). Enables calculating gradients of any mathematical equation with respect to its elements by implementing
-backpropagation like API that is commonly used by Python frameworks like Pytorch. 
 
-The goal was to explore the complexities of C++ in trying to implement a backpropoagation API which is as close to Python frameworks as possible. Purely for fun and educational purpose. I educated myself at least :)
+A simple autograd library written in C++, inspired by [karpathy/micrograd](https://github.com/karpathy/micrograd?tab=readme-ov-file). It enables calculating gradients of mathematical equations with respect to their elements by implementing a backpropagation-like API, similar to those found in Python frameworks like PyTorch. This project was a fun, educational exercise to explore the complexities of implementing such an API in C++ as closely as possible to its Python counterparts. However, it can be used to build an actual Neural network model. Check source.
+
 
 # Example usage
 
