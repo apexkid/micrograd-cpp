@@ -1,5 +1,7 @@
 # Micrograd-cpp
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 A simple autograd library written entirely in C++ inspired by [karpathy/micrograd](https://github.com/karpathy/micrograd?tab=readme-ov-file). Enables calculating gradients of any mathematical equation with respect to its elements by implementing
 backpropagation like API that is commonly used by Python frameworks like Pytorch. 
 
