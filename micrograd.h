@@ -78,8 +78,18 @@ public:
             const std::shared_ptr<GradNode> &b);
 
   // Power
-  std::shared_ptr<GradNode> pow(double p);
-  std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &p);
+  friend std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
+                                       double exponent);
+  friend std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
+                                       std::shared_ptr<GradNode> &exponent);
+
+  std::vector<std::shared_ptr<GradNode>> children_;
+  std::function<void()> backward_fn_;
+  double data_;
+  double grad_ = 0.0;
+
+  std::string label_;
+  bool is_scalar_ = false;
 
 private:
   std::stack<const GradNode *> TopologicalSort();
@@ -87,13 +97,6 @@ private:
   void TopologicalSortUtil(const GradNode &node,
                            std::stack<const GradNode *> &stack,
                            std::set<const GradNode *> &visited);
-
-  std::function<void()> backward_fn_;
-  double data_;
-  double grad_ = 0.0;
-  std::vector<std::shared_ptr<GradNode>> children_;
-  std::string label_;
-  bool is_scalar_ = false;
 };
 
 } // namespace micrograd

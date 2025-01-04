@@ -106,20 +106,23 @@ std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
 
 std::shared_ptr<GradNode> operator+(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto output_backward = [a, b]() {
-    if (!a->is_scalar_) {
-      a->grad_ += 1.0;
-    }
-    if (!b->is_scalar_) {
-      b->grad_ += 1.0;
-    }
-  };
 
   auto output_data = a->data_ + b->data_;
   auto output_label = a->label_ + "+" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::CreateGradnode(output_data, output_label, output_children,
-                                  output_backward);
+
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [a, b, result]() {
+    if (!a->is_scalar_) {
+      a->grad_ += result->grad_;
+    }
+    if (!b->is_scalar_) {
+      b->grad_ += result->grad_;
+    }
+  };
+
+  return result;
 }
 
 std::shared_ptr<GradNode> operator-(double a,
@@ -138,20 +141,22 @@ std::shared_ptr<GradNode> operator-(const std::shared_ptr<GradNode> &a,
 
 std::shared_ptr<GradNode> operator-(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto output_backward = [a, b]() {
-    if (!a->is_scalar_) {
-      a->grad_ += 1.0;
-    }
-    if (!b->is_scalar_) {
-      b->grad_ -= 1.0;
-    }
-  };
-
   auto output_data = a->data_ - b->data_;
   auto output_label = a->label_ + "-" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::CreateGradnode(output_data, output_label, output_children,
-                                  output_backward);
+
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [a, b, result]() {
+    if (!a->is_scalar_) {
+      a->grad_ += result->grad_;
+    }
+    if (!b->is_scalar_) {
+      b->grad_ -= result->grad_;
+    }
+  };
+
+  return result;
 }
 
 std::shared_ptr<GradNode> operator*(double a,
@@ -170,20 +175,22 @@ std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
 
 std::shared_ptr<GradNode> operator*(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto output_backward = [a, b]() {
-    if (!a->is_scalar_) {
-      a->grad_ += b->data_;
-    }
-    if (!b->is_scalar_) {
-      b->grad_ += a->data_;
-    }
-  };
 
   auto output_data = a->data_ * b->data_;
   auto output_label = a->label_ + "*" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::CreateGradnode(output_data, output_label, output_children,
-                                  output_backward);
+
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [a, b, result]() {
+    if (!a->is_scalar_) {
+      a->grad_ += (result->grad_ * b->data_);
+    }
+    if (!b->is_scalar_) {
+      b->grad_ += (result->grad_ * a->data_);
+    }
+  };
+  return result;
 }
 
 std::shared_ptr<GradNode> operator/(double a,
@@ -202,44 +209,50 @@ std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
 
 std::shared_ptr<GradNode> operator/(const std::shared_ptr<GradNode> &a,
                                     const std::shared_ptr<GradNode> &b) {
-  auto output_backward = [a, b]() {
-    if (!a->is_scalar_) {
-      a->grad_ += (1.0 / b->data_);
-    }
-    if (!b->is_scalar_) {
-      b->grad_ -= (a->data_ / std::pow(b->data_, 2));
-    }
-  };
-
   auto output_data = a->data_ / b->data_;
   auto output_label = a->label_ + "/" + b->label_;
   auto output_children = std::vector<std::shared_ptr<GradNode>>{a, b};
-  return GradNode::CreateGradnode(output_data, output_label, output_children,
-                                  output_backward);
-}
 
-std::shared_ptr<GradNode> GradNode::pow(double p) {
-  auto gradnode = GradNode::CreateGradnode(p, std::to_string(p));
-  gradnode->MakeScalar();
-  return GradNode::pow(gradnode);
-}
-
-std::shared_ptr<GradNode> GradNode::pow(std::shared_ptr<GradNode> &p) {
-  auto output_backward = [p, this]() {
-    if (!p->is_scalar_) {
-      p->grad_ += std::pow(this->data_, p->data_) * std::log(this->data_);
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [a, b, result]() {
+    if (!a->is_scalar_) {
+      a->grad_ += (result->grad_ / b->data_);
     }
-    if (!this->is_scalar_) {
-      this->grad_ += p->data_ * std::pow(this->data_, p->data_ - 1);
+    if (!b->is_scalar_) {
+      b->grad_ -= (result->grad_ * a->data_ / std::pow(b->data_, 2));
     }
   };
+  return result;
+}
 
-  auto output_data = std::pow(this->data_, p->data_);
-  auto output_label = this->label_ + "^" + p->label_;
-  auto output_children = std::vector<std::shared_ptr<GradNode>>{
-      std::make_shared<GradNode>(*this), p};
-  return GradNode::CreateGradnode(output_data, output_label, output_children,
-                                  output_backward);
+std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
+                              double exponent) {
+  auto gradnode = GradNode::CreateGradnode(exponent, std::to_string(exponent));
+  gradnode->MakeScalar();
+  return pow(base, gradnode);
+}
+
+std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
+                              std::shared_ptr<GradNode> &exponent) {
+  auto output_data = std::pow(base->data_, exponent->data_);
+  auto output_label = base->label_ + "^" + exponent->label_;
+  auto output_children = std::vector<std::shared_ptr<GradNode>>{base, exponent};
+
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [base, exponent, result]() {
+    if (!base->is_scalar_) {
+      base->grad_ += result->grad_ * exponent->data_ *
+                     std::pow(base->data_, exponent->data_ - 1);
+    }
+    if (!exponent->is_scalar_) {
+      exponent->grad_ += result->grad_ *
+                         std::pow(base->data_, exponent->data_) *
+                         std::log(base->data_);
+    }
+  };
+  return result;
 }
 
 } // namespace micrograd
