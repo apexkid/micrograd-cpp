@@ -255,6 +255,21 @@ std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
   return result;
 }
 
+std::shared_ptr<GradNode> log(std::shared_ptr<GradNode> &x) {
+  auto output_data = std::log(x->data_);
+  auto output_label = "log(" + x->label_ + ")";
+  auto output_children = std::vector<std::shared_ptr<GradNode>>{x};
+
+  auto result = GradNode::CreateGradnode(output_data, output_label);
+  result->children_ = output_children;
+  result->backward_fn_ = [x, result]() {
+    if (!x->is_scalar_) {
+      x->grad_ += (result->grad_ * (1 / x->data_));
+    }
+  };
+  return result;
+}
+
 std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x) {
   auto e = GradNode::CreateGradnode(std::exp(1), "E");
   e->MakeScalar();

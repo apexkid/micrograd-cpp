@@ -148,6 +148,9 @@ public:
   friend std::shared_ptr<GradNode> pow(std::shared_ptr<GradNode> &base,
                                        std::shared_ptr<GradNode> &exponent);
 
+  /// Log
+  friend std::shared_ptr<GradNode> log(std::shared_ptr<GradNode> &x);
+
   /// Sigmoid
   friend std::shared_ptr<GradNode> sigmoid(std::shared_ptr<GradNode> &x);
 

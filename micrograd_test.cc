@@ -70,6 +70,17 @@ TEST(Micrograd, Power) {
   EXPECT_EQ(z->GetData(), 8.0);
 }
 
+TEST(Micrograd, Log) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+
+  auto z = log(a);
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), 0.5);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), std::log(2.0));
+}
+
 TEST(Micrograd, ScalarSum) {
   auto a = GradNode::CreateGradnode(1.0, "a");
   auto z = 1.0 + a;
@@ -196,6 +207,20 @@ TEST(Micrograd, ChainedEquation5) {
   EXPECT_EQ(b->GetGrad(), 7);
   EXPECT_EQ(z->GetGrad(), 1.0);
   EXPECT_EQ(z->GetData(), 14.0);
+}
+
+// Z = A*Log(A) + B*Log(B)
+TEST(Micrograd, ChainedEquation6) {
+  auto a = GradNode::CreateGradnode(2.0, "a");
+  auto b = GradNode::CreateGradnode(4.0, "b");
+
+  auto z = (a * log(a)) + (b * log(b));
+  z->Backward();
+
+  EXPECT_EQ(a->GetGrad(), std::log(2.0) + 1.0);
+  EXPECT_EQ(b->GetGrad(), std::log(4.0) + 1.0);
+  EXPECT_EQ(z->GetGrad(), 1.0);
+  EXPECT_EQ(z->GetData(), 2 * std::log(2.0) + 4 * std::log(4.0));
 }
 
 // Z = A + A + A

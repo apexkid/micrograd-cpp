@@ -24,7 +24,13 @@ cc_test(
 )
 
 cc_binary(
-    name = "nn_regression_demo",
-    srcs = ["nn_regression_demo.cc"],
+    name = "nn_linear_regression_demo",
+    srcs = ["nn_linear_regression_demo.cc"],
+    deps = [":micrograd"], 
+)
+
+cc_binary(
+    name = "nn_logistic_regression_demo",
+    srcs = ["nn_logistic_regression_demo.cc"],
     deps = [":micrograd"], 
 )
